@@ -3,6 +3,7 @@ package org.acme.rest;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.MediaType;
@@ -11,7 +12,6 @@ import org.acme.util.panache.PanacheQueryFactory;
 import org.acme.util.query.*;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
-import jakarta.transaction.Transactional;
 import java.util.*;
 
 @Path("/api/v1/products")

@@ -45,6 +45,7 @@ public class ProductEntity extends PanacheEntityBase {
     public Boolean deleted;
 
     @OneToMany(mappedBy = "product",
+            fetch = FetchType.EAGER,
             cascade = CascadeType.ALL,
             orphanRemoval = true)
     public List<ProductLangEntity> langs = new ArrayList<>();
