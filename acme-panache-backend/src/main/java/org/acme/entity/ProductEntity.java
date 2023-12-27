@@ -44,6 +44,11 @@ public class ProductEntity extends PanacheEntityBase {
     public LocalDateTime updatedAt;
     public Boolean deleted;
 
+    // i must use fetch-type eager to Force the resolvement
+    // of the lang-entries in case of the panache-query-params solution,
+    // as in that case the transaction is already finished when it tries to load the stuff.
+    // note: i hate this magic, and also it seems hibernate resolves the lang-entries via single SQL-statements
+    // for each found entry (verify this). This would slow down complex data from complex table-relations very much if that is the case.
     @OneToMany(mappedBy = "product",
             fetch = FetchType.EAGER,
             cascade = CascadeType.ALL,
