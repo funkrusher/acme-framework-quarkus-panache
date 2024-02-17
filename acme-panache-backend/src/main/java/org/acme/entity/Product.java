@@ -1,20 +1,18 @@
 package org.acme.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.Instant;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
-@Entity(name = "product")
+@Entity
+@Table(name = "product")
 @FilterDefs({
         @FilterDef(name = "product.productId.equal", defaultCondition = "productId = :productId", parameters = @ParamDef(name = "productId", type = Long.class)),
         @FilterDef(name = "product.productId.greater", defaultCondition = "productId > :productId", parameters = @ParamDef(name = "productId", type = Long.class)),
@@ -31,18 +29,31 @@ import java.util.Set;
         @Filter(name = "product.price.lesser_equal"),
         @Filter(name = "product_lang.name.like", condition = "exists (select 1 from product_lang l where l.productId = productId and l.name = :name)")
 })
-public class ProductEntity extends PanacheEntityBase {
-
+public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "productId")
-    public Long productId;
+    @Column(name = "productId", nullable = false)
+    private Long productId;
 
-    public Integer clientId;
-    public BigDecimal price;
-    public LocalDateTime createdAt;
-    public LocalDateTime updatedAt;
-    public Boolean deleted;
+    @NotNull
+    @Column(name = "clientId", nullable = false)
+    private Integer client;
+
+    @NotNull
+    @Column(name = "price", nullable = false, precision = 10, scale = 2)
+    private BigDecimal price;
+
+    @NotNull
+    @Column(name = "createdAt", nullable = false)
+    private Instant createdAt;
+
+    @NotNull
+    @Column(name = "updatedAt", nullable = false)
+    private Instant updatedAt;
+
+    @NotNull
+    @Column(name = "deleted", nullable = false)
+    private Boolean deleted = false;
 
     // i must use fetch-type eager to Force the resolvement
     // of the lang-entries in case of the panache-query-params solution,
@@ -53,5 +64,62 @@ public class ProductEntity extends PanacheEntityBase {
             fetch = FetchType.EAGER,
             cascade = CascadeType.ALL,
             orphanRemoval = true)
-    public List<ProductLangEntity> langs = new ArrayList<>();
+    private Set<ProductLang> productLangs = new LinkedHashSet<>();
+
+    public Long getProductId() {
+        return productId;
+    }
+
+    public void setProductId(Long productId) {
+        this.productId = productId;
+    }
+
+    public Integer getClient() {
+        return client;
+    }
+
+    public void setClient(Integer client) {
+        this.client = client;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    public Set<ProductLang> getProductLangs() {
+        return productLangs;
+    }
+
+    public void setProductLangs(Set<ProductLang> productLangs) {
+        this.productLangs = productLangs;
+    }
+
 }

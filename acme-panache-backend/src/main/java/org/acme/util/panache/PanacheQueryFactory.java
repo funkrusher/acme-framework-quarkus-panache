@@ -2,9 +2,8 @@ package org.acme.util.panache;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Sort;
-import io.smallrye.mutiny.Uni;
-import org.acme.entity.ProductEntity;
 import org.acme.util.query.Filter;
 import org.acme.util.query.QueryParameters;
 import org.acme.util.query.Sorter;
@@ -16,7 +15,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class PanacheQueryFactory<T extends PanacheEntityBase> {
@@ -27,7 +25,7 @@ public class PanacheQueryFactory<T extends PanacheEntityBase> {
         this.panacheEntityClass = panacheEntityClass;
     }
 
-    public PanacheQuery<T> createFromQueryParameters(QueryParameters queryParameters) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    public PanacheQuery<T> createFromQueryParameters(PanacheRepositoryBase repository, QueryParameters queryParameters) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         // Apply sorters to the query
         Sort sort = Sort.empty();
         if (queryParameters.getSorter() != null) {
@@ -40,9 +38,7 @@ public class PanacheQueryFactory<T extends PanacheEntityBase> {
         }
 
         // Create a PanacheQuery object
-        Method findAllMethod = panacheEntityClass.getDeclaredMethod("findAll");
-
-        PanacheQuery<T> panacheQuery = (PanacheQuery<T>) findAllMethod.invoke(sort);
+        PanacheQuery<T> panacheQuery = (PanacheQuery<T>) repository.findAll(sort);
 
         // Set the page and pageSize
         panacheQuery = panacheQuery.page(queryParameters.getPage(), queryParameters.getPageSize());

@@ -1,0 +1,21 @@
+
+
+
+Automatisches Generieren von Entities aus dem Datenbank-Schema ist nicht möglich.
+Dies muss manuell gemacht werden, weil es zu viele Sonderfälle gibt.
+- Char und Varchar krachen beim start. der Codegenerator definiert diese nicht von alleine
+- Es muss manuell entschieden werden wie die Relationships in den Classes eingefügt werden.
+- Manchmal braucht man nur die Ids, manchmal relationships.
+- Die Filters und FilterDef müssen ohnehin manuell an die Entities angefügt werden.
+- wegen PanacheQuery und Filters/Filter-Defs müssen Relationen die durch filter aufgelöst werden sollen zwingend als FetchType=EAGER und nicht LAZY definiert werden. Was dies für weitere Auswirkungen hat ist unklar.
+- es können rekursive Referenz-Chains entstehen wenn man nicht aufpasst. Daher müssen Relationen zwingend Einseitig aufgebaut werden und dürfen nicht bidirektional sein, weil sonst Rekursionen aufpoppen.
+
+
+Wenn man nicht Hibernate Entities sondern Panache Entities nutzt,
+kann der Codegenerator fast gar nicht genutzt werden, außer man definiert sie um zu Panache Entities,
+was komplett manuell gemacht werden muss.
+
+Es kann SQL aus den Hibernate-Entities generiert werden. Auch hier ist es besser Hibernate-Entities,
+anstatt Pananche Entities zu haben, weil alle Code-Generatoren und Intellij Plugins auf Hibernate-Entities gedacht sind
+und die Panache Entities z.b. keine Getter und Setter etc haben. Evtl geht es aber trotzdem. Dies ist aber unklar.
+Vermutlich wird es zu Problemen kommen

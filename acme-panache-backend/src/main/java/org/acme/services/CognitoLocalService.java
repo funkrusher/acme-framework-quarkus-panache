@@ -4,8 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Default;
 import jakarta.inject.Inject;
-import org.acme.entity.UserEntity;
-import org.acme.entity.UserRoleEntity;
+import org.acme.entity.Role;
+import org.acme.entity.User;
+import org.acme.entity.UserRole;
+import org.acme.repository.UserRepository;
+import org.acme.repository.UserRoleRepository;
 import org.acme.util.cognito.AcmeClaim;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -35,6 +38,12 @@ public class CognitoLocalService {
     private CognitoIdentityProviderClient cognitoIpc;
 
     @Inject
+    UserRepository userRepository;
+
+    @Inject
+    UserRoleRepository userRoleRepository;
+
+    @Inject
     ObjectMapper objectMapper;
 
     /**
@@ -56,26 +65,29 @@ public class CognitoLocalService {
             String lastname,
             String roleId) {
 
-        UserEntity user = new UserEntity();
-        user.clientId = clientId;
-        user.email = email;
-        user.firstname = firstname;
-        user.lastname = lastname;
+        User user = new User();
+        user.setClientId(clientId);
+        user.setEmail(email);
+        user.setFirstname(firstname);
+        user.setLastname(lastname);
 
-        UserRoleEntity userRole = new UserRoleEntity();
+        UserRole userRole = new UserRole();
 
         String userSub = null;
         try {
-            user.persistAndFlush();
+            userRepository.persistAndFlush(user);
 
-            userRole.userId = user.userId;
-            userRole.roleId = roleId;
-            userRole.persistAndFlush();
+            Role role = new Role();
+            role.setRoleId(roleId);
+
+            userRole.setUser(user);
+            userRole.setRole(role);
+            userRoleRepository.persistAndFlush(userRole);
 
             List<String> roles = new ArrayList<>();
             roles.add(roleId);
 
-            AcmeClaim acmeClaim = new AcmeClaim(clientId, user.userId, roles);
+            AcmeClaim acmeClaim = new AcmeClaim(clientId, user.getUserId(), roles);
             String acmeClaimStr = objectMapper.writeValueAsString(acmeClaim);
 
             SignUpRequest request = SignUpRequest.builder()
@@ -98,11 +110,11 @@ public class CognitoLocalService {
 
         } catch (Exception e) {
             // delete database entries in case of error (manual rollback)
-            if (userRole.isPersistent()) {
-                userRole.delete();
+            if (userRoleRepository.isPersistent(userRole)) {
+                userRoleRepository.delete(userRole);
             }
-            if (user.isPersistent()) {
-                user.delete();
+            if (userRepository.isPersistent(user)) {
+                userRepository.delete(user);
             }
         }
         return userSub;
