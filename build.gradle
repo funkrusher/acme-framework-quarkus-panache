@@ -1,7 +1,9 @@
 plugins {
     id 'java'
+    id 'java-library'
     id 'idea'
-    id 'org.kordamp.gradle.jandex'
+    id 'io.quarkus'
+    id "org.liquibase.gradle"
 }
 
 // dependencies-resolvement
@@ -10,13 +12,29 @@ repositories {
     mavenLocal()
 }
 
+dependencies {
+    implementation enforcedPlatform(libs.quarkusPlaform)
+    implementation libs.bundles.quarkus
+    implementation libs.mariadbJavaClient
+    implementation libs.jacksonCsv
+    implementation libs.jacksonJsr310
+
+    testImplementation libs.bundles.test.quarkus
+    testImplementation libs.awaitility
+    testImplementation libs.mariadbJavaClient
+    testImplementation libs.restAssured
+}
+
 group 'org.acme'
 version '1.0.0-SNAPSHOT'
 
 // java-settings for the whole project
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+test {
+    systemProperty "java.util.logging.manager", "org.jboss.logmanager.LogManager"
 }
 compileJava {
     options.encoding = "UTF-8"
@@ -33,4 +51,26 @@ idea {
         languageLevel = '21'
         vcs = 'Git'
     }
+}
+
+// liquibase command, needed to apply rollbacks in local-dev.
+def properties = new Properties()
+file('src/main/resources/application.properties').withInputStream {
+    stream -> properties.load(stream)
+}
+
+println  properties.getProperty('quarkus.datasource.jdbc.url')
+println  properties.getProperty('quarkus.datasource.username')
+println  properties.getProperty('quarkus.datasource.password')
+
+task liquibaseRollback(type: JavaExec) {
+    classpath sourceSets.main.runtimeClasspath
+    main 'liquibase.integration.commandline.Main'
+    args '--changeLogFile=liquibase/changelog.xml',
+            '--driver=org.mariadb.jdbc.Driver',
+            '--url=' + properties.getProperty('quarkus.datasource.jdbc.url'),
+            '--username=' + properties.getProperty('quarkus.datasource.username'),
+            '--password=' + properties.getProperty('quarkus.datasource.password'),
+            'rollback',
+            project.properties['rollbackTag'] ? project.properties['rollbackTag'] : ''
 }
